@@ -69,6 +69,7 @@ aside .neighborhood_form {
   border-bottom: 1px solid gray;
   border-top: 1px solid gray;
   padding: 5px;
+  font-size: 10px;
 }
 
 aside .neighborhood_form input {
@@ -96,6 +97,7 @@ aside .searchBox_form {
   padding: 10px 5px;
   border-bottom: 1px solid gray;
   border-top: 1px solid gray;
+  font-size: 10px;
 }
 
 aside #searchTerms {
@@ -116,7 +118,7 @@ aside .list {
   flex-wrap: nowrap;
   padding: 1px;
   overflow: hidden;
-  font-size: 15px;
+  font-size: 10px;
 }
 
 aside .list div {
@@ -140,7 +142,7 @@ aside .list .list_title span {
   flex: 1;
   margin: auto 0;
   overflow: auto;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 aside .list .list_title .btn {

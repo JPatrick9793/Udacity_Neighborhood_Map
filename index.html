@@ -21,8 +21,6 @@
     </p>
     <p>currentBounds | <span data-bind="text: currentBounds"></span>
     </p>
-    <p>currentWindowPosition | <span data-bind="text: currentWindowPosition"></span>
-    </p>
       
     </div>
 </header>
@@ -61,7 +59,7 @@
 
     <div data-bind="foreach: markersAndPlaces" class="searchResults">
       
-      <div class="list" data-bind="style: {textDecoration: $data.visible() ? 'none' : 'line-through', color: $data.visible() ? 'black' : 'gray' } ">
+      <div class="list" data-bind="style: {textDecoration: $data.visible() ? 'none' : 'line-through', color: $data.visible() ? 'black' : 'gray' }, event: {mouseover: $parent.markerIconToHover, mouseout: $parent.markerIconToDefault} ">
         
         <div class="list_title">
 

@@ -138,6 +138,15 @@ var ViewModel = function() {
     });
   };
   
+  // function to toggle the marker icon when the 
+  // associated object within the aside is hovered over
+  this.markerIconToHover = function(object) {
+    object.marker.setIcon(model.hover_icon());
+  }
+  this.markerIconToDefault = function(object) {
+    object.marker.setIcon(model.default_icon());
+  }
+  
   
   
   
@@ -212,6 +221,8 @@ var ViewModel = function() {
       object.marker.setVisible(false);
       self.infoWindow.close();
       self.currentWindowPosition(null);
+      object.googleInfo(false);
+      object.foursquareInfo(false);
       object.visible(false);
     } else {
       object.marker.setVisible(true);
@@ -476,6 +487,7 @@ var ViewModel = function() {
         object.marker.setVisible(false);
         object.visible(false);
         object.foursquareInfo(false);
+        object.googleInfo(false);
       } else {
         object.marker.setVisible(true);
         object.visible(true);
@@ -500,6 +512,7 @@ var ViewModel = function() {
           object.marker.setVisible(false);
           object.visible(false);
           object.foursquareInfo(false);
+          object.googleInfo(false);
         } else {
           object.marker.setVisible(true);
           object.visible(true);
@@ -519,6 +532,7 @@ var ViewModel = function() {
         object.marker.setVisible(false);
         object.visible(false);
         object.foursquareInfo(false);
+        object.googleInfo(false);
       } else {
         object.marker.setVisible(true);
         object.visible(true);
@@ -548,24 +562,17 @@ var ViewModel = function() {
   };
   // toggles the google information window within the aside
   // also toggles all others off
-  this.toggleInfoWindow = function(object) {
-    // if the marker is visible...
-    if (object.marker.getVisible()) {
-      console.log("current marker is visible");
-      if (self.infoWindow.marker != object.marker) {
-        console.log("the current infoWindow marker is not the selected marker");
-        self.populateInfoWindow(object.marker);
-        self.toggleAllGoogleInfos();
-        object.googleInfo(true);
-      } else {
-        console.log("info window already open... now closing");
-        self.infoWindow.close();
-        self.infoWindow.marker = null;
-        self.toggleAllGoogleInfos();
-      }
+  this.toggleThisGoogleInfoWindow = function(object) {
+    // if the current objects googleInfo attr is true:
+    if (object.googleInfo()) {
+      //toggle all infos off
+      self.toggleAllGoogleInfos();
     } else {
-      console.log("current marker is not visible...");
+      //toggle all other google infos off
+      self.toggleAllGoogleInfos();
+      object.googleInfo(true);
     }
+    
   };
   // turns the foursquareInfo attribute off for all
   // objects within the markersAndPlaces observable array
@@ -599,9 +606,13 @@ var ViewModel = function() {
   // toggles both the google places information div
   // and the foursquare information div
   this.toggleInformationWindows = function(object) {
-    self.toggleInfoWindow(object);
+    self.toggleThisGoogleInfoWindow(object);
     self.toggleThisFourSquareInfo(object);
-    console.log(object.marker.position);
+    if (object.visible() && object.googleInfo() && object.foursquareInfo()) {
+      self.populateInfoWindow(object.marker);
+    } else {
+      self.infoWindow.close();
+    }
   };
 
   
@@ -706,5 +717,7 @@ var ViewModel = function() {
 
 
 function initMap() {
-  ko.applyBindings(new ViewModel());
+  var init = new ViewModel();
+  ko.applyBindings(init);
+  init.dropDefaultMarkers();
 }
