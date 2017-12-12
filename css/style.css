@@ -1,0 +1,182 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+#pano {
+  height: 200px;
+  width: 200px;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  border-bottom: 1px solid black;
+  color: white;
+  background-color: black;
+  height: 10vh;
+  min-height: 45px;
+  padding: 0 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+header p {
+  margin: 0 10px;
+  padding: 0;
+  font-size: 8px;
+}
+
+.body_wrapper {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  height: 80vh;
+  min-height: 350px;
+}
+
+aside {
+  min-width: 200px;
+  width: 25%;
+  max-width: 300px;
+  border-right: 1px solid black;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+aside .button_features {
+  padding: 10px;
+}
+
+aside .button_features button {
+  height: 25px;
+  width: 25px;
+}
+
+aside .neighborhood_form {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  border-bottom: 1px solid gray;
+  border-top: 1px solid gray;
+  padding: 5px;
+}
+
+aside .neighborhood_form input {
+  height: 25px;
+  margin: 5px;
+  width: 150px;
+}
+
+aside .neighborhood_form button {
+  height: 25px;
+  width: 25px;
+  margin: 5px;
+}
+
+aside #neighborhoodZoom {
+  flex: 1;
+  margin: 5px 0;
+}
+
+aside .searchBox_form {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 10px 5px;
+  border-bottom: 1px solid gray;
+  border-top: 1px solid gray;
+}
+
+aside #searchTerms {
+  max-width: 90%;
+  margin: 5px 0;
+}
+
+aside .searchResults {
+  overflow: scroll;
+  flex: 1;
+}
+
+aside .list {
+  border-top: 1px solid gray;
+  border-bottom: 1px solid gray;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  padding: 1px;
+  overflow: hidden;
+  font-size: 15px;
+}
+
+aside .list div {
+  word-wrap: break-word;
+  width: 100%;
+}
+
+aside .list:hover {
+  background-color: lightgray;
+}
+
+aside .list .list_title {
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+  margin: 0;
+  height: 35px;
+}
+
+aside .list .list_title span {
+  flex: 1;
+  margin: auto 0;
+  overflow: auto;
+  font-size: 10px;
+}
+
+aside .list .list_title .btn {
+  height: 25px;
+  width: 25px;
+  align-self: center;
+  border-radius: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+aside .list .list_title .btn:hover {
+  cursor: pointer;
+}
+
+aside .list img {
+  max-width: 100%;
+  max-height: 150px;
+  padding: 15px 0;
+  margin: 0 auto;
+}
+
+#main {
+  border-left: 1px solid black;
+  flex: 1;
+  height: 100%;
+}
+
+#map {
+  height: 100%;
+}
+
+footer {
+  border-top: 1px solid black;
+  color: white;
+  background-color: black;
+  height: 10vh;
+  min-height: 30px;
+}
