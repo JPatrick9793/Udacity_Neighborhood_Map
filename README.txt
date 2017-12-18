@@ -27,11 +27,12 @@ Explore neighborhoods using google maps and FourSquare APIs. Check an establishm
 2) Open index.html with your browser of choice
 3) Have fun!
 4) Use the drawing manager to draw shapes which narrow down your searchbox selection
+5) Enter an address into the filter section, and select a distance to filter out locations too far away
 
 At the top of the aside there are 3 buttons:
 - the eraser button will erase all searchbox results from the aside.
 - the paintbrush will toggle the drawing manager on/off
-- the database button will drop the default hard-coded markers onto the map
+- the database button will drop the default hard-coded markers onto the map (dropped onto map by default when page is opened)
 
 
 --------------------------
