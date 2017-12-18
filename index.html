@@ -6,6 +6,8 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
   
   
       <link rel="stylesheet" href="css/style.css">
@@ -15,52 +17,82 @@
 
 <body>
   <header>
-  <div>NEIGHBORHOOD MAP</div> 
+  <div>NEIGHBORHOOD MAP</div>
   <div>
     <p>currentMapCenter | <span data-bind="text: currentMapCenter"></span>
     </p>
     <p>currentBounds | <span data-bind="text: currentBounds"></span>
     </p>
-      
-    </div>
-</header>
+    <!-- ko if: filterInputText().length > 0 -->
+    <p>filterInputText | <span data-bind="text: filterInputText"></span>
+    </p>
+    <p>selectedDistanceMiles | <span data-bind="text: selectedDistanceMiles"></span>
+    </p>
+    <p>selectedDistanceMeters | <span data-bind="text: selectedDistanceMeters"></span>
+    </p>
+    <!-- /ko -->
+  
+  </div>
+</header> 
 
 <main class="body_wrapper">
   <aside>
 
     <div class="button_features">
-      
+
       <button data-bind="click: clearMarkersAndPlaces">
         <i class="fa fa-eraser"></i>
       </button>
-      
+
       <button data-bind="click: toggleDrawingManager">
         <i class="fa fa-paint-brush"></i>
       </button>
-      
+
       <button data-bind="click: dropDefaultMarkers">
         <i class="fa fa-database"></i> 
       </button>
-      
+
     </div>
 
     <div class="neighborhood_form">
-      <input type="text" placeholder="Enter Neighborhood" id="neighborhoodZoom" />
-      <button data-bind="click: zoomToNeighborhood">
-        <i class="fa fa-arrow-circle-o-right"></i>
-      </button>
+
+      <div>Neighborhood Zoom: </div>
+
+      <input type="text" placeholder="Enter Neighborhood" id="neighborhoodZoom" data-bind="textInput: neighborhoodInputText, event: {onload: initAutoComplete($element)}" />
+
     </div>
 
-    <div class="searchBox_form"> 
+    <div class="searchBox_form">
+
       <div>Search for locations:</div>
-      <input type="text" placeholder="Enter search terms" id="searchTerms" />
-      <p>RESULTS:</p>
+
+      <input type="text" placeholder="Enter search terms" id="searchTerms" data-bind="event: {onload: initSearchBox($element)}" />
+      
+      <!-- SHOW FILTER OPTIONS WHEN THERE ARE SEARCH RESULTS -->
+      <!-- ko if: markersAndPlaces().length > 0 -->
+      <hr>
+      <div>RESULTS:</div>
+      <br>
+      <div>Filter Results Near Address:</div>
+
+      <input type="text" placeholder="Enter Address" id="filterAddress" data-bind="textInput: filterInputText, event: {onload: initFilterAutoComplete($element)}" />
+      <!-- ko if: filterInputText().length > 0 -->
+      <br> 
+      
+      <div><input type="text" data-bind="value: selectedDistanceMiles" id="filterDistanceSlider"/> Miles</div>
+      
+      <input type="range" min="1" max = "100" data-bind="value: selectedDistanceMiles,
+                                                         valueUpdate: 'input',
+                                                         event: {change: filterSearchResults}"/>
+      <!-- /ko -->
+      <!-- /ko -->
+
     </div>
 
     <div data-bind="foreach: markersAndPlaces" class="searchResults">
-      
+
       <div class="list" data-bind="style: {textDecoration: $data.visible() ? 'none' : 'line-through', color: $data.visible() ? 'black' : 'gray' }, event: {mouseover: $parent.markerIconToHover, mouseout: $parent.markerIconToDefault} ">
-        
+
         <div class="list_title">
 
           <span data-bind="text: $data.marker.title"></span>
@@ -81,54 +113,63 @@
 
           <button class="btn" data-bind="click: $parent.removeMarker">
             <i class="fa fa-trash"></i></button>
-          
+
         </div>
 
         <!-- ko if: $data.googleInfo() && $data.visible() -->
         <div><i class="fa fa-google"></i> | GOOGLE:</div>
+        <br>
         <div data-bind="text: $data.place.formatted_address"></div>
         <div>Rating: <span data-bind="text: $data.place.rating"></span>/5</div>
         <img src="" data-bind="attr: { src: $data.place.photos[0].getUrl({ 'maxWidth': 300, 'maxHeight': 200 }) }" alt="img" />
         <!-- /ko -->
 
         <!-- ko if: $data.foursquareInfo() && $data.visible() -->
+        <br>
         <div><i class="fa fa-foursquare"></i> | FOURSQUARE:</div>
         <div data-bind="text: $parent.currentFourSquareName"></div>
-        <div>Rating: <span data-bind="text: $parent.currentFourSquareRating"></span>/10</div> 
-        <div>Hours:</div>
-        <ul data-bind="foreach: $parent.currentFourSquareHours">
-          <li>
-            <span data-bind="text: $data.days"></span>:
-            <span data-bind="text: $data.time"></span>
-          </li>
-        </ul>
+        <div>Rating: <span data-bind="text: $parent.currentFourSquareRating"></span>/10</div>
+        <div data-bind="if: $parent.currentFourSquareHours().length > 0">
+
+          <div>HOURS:</div>
+          <ul data-bind="foreach: $parent.currentFourSquareHours">
+            <li>
+              <span data-bind="text: $data.days"></span>:
+              <span data-bind="text: $data.time"></span>
+            </li>
+          </ul>
+        </div>
+
+        <div data-bind="if: $parent.currentFourSquareHours().length == 0 ">FourSquare hours information not available <i class="fa fa-frown-o"></i></div>
         <!-- /ko -->
 
         <!-- ko if: $data.googleInfo() && !$data.foursquareInfo() && $data.visible() -->
         <div><i class="fa fa-foursquare"></i> | FOURSQUARE</div>
         <div>foursquare hours information not available <i class="fa fa-frown-o"></i></div>
         <!-- /ko -->
-        
+
       </div>
-      
+
     </div>
-    
+
   </aside>
-  
+
   <div id="main">
-    
+
     <div id="map"></div>
     
-    <script src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyBapC08lQSjzK3EjliUyI89EB7j6a7YRZE&callback=initMap" defer></script>
-    
-  </div>
-  
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/knockout/3.2.0/knockout-min.js'></script>
+
+    <!-- MAKE SURE ALL OTHER SCRIPTS LOADED FIRST -->
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyBapC08lQSjzK3EjliUyI89EB7j6a7YRZE&callback=initMap" async defer onerror="mapError()"></script>
+
+  </div> 
+
 </main>
 
 <footer>Footer :-)</footer>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-<script src='http://cdnjs.cloudflare.com/ajax/libs/knockout/3.2.0/knockout-min.js'></script>
-
+  
     <script  src="js/index.js"></script>
 
 </body>

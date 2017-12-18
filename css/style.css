@@ -22,7 +22,7 @@ header {
   color: white;
   background-color: black;
   height: 10vh;
-  min-height: 45px;
+  min-height: 75px;
   padding: 0 5px;
   display: flex;
   justify-content: space-between;
@@ -78,15 +78,9 @@ aside .neighborhood_form input {
   width: 150px;
 }
 
-aside .neighborhood_form button {
-  height: 25px;
-  width: 25px;
-  margin: 5px;
-}
-
 aside #neighborhoodZoom {
-  flex: 1;
   margin: 5px 0;
+  width: 90%;
 }
 
 aside .searchBox_form {
@@ -101,8 +95,21 @@ aside .searchBox_form {
 }
 
 aside #searchTerms {
-  max-width: 90%;
+  width: 90%;
   margin: 5px 0;
+}
+
+aside #filterAddress {
+  width: 90%;
+}
+
+aside #filterDistances {
+  width: 75px;
+  display: inline;
+}
+
+aside #filterDistanceSlider {
+  width: 30px;
 }
 
 aside .searchResults {

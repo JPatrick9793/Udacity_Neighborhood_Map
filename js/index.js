@@ -71,11 +71,8 @@ var ViewModel = function() {
   
   // function to drop the default icons on the map
   this.dropDefaultMarkers = function() {
-    console.log("Now within dropDefaultMarkers function");
 
     self.clearMarkersAndPlaces();
-
-    console.log("cleared markersAndPlaces array");
 
     model.data.forEach(function(data) {
       // clear current self.bounds for the default icons
@@ -89,6 +86,7 @@ var ViewModel = function() {
 
       svc.getDetails(request, function(place, status) {
         if (status == "OK") {
+          
           var marker = new google.maps.Marker({
             position: data.position,
             title: data.name,
@@ -97,25 +95,7 @@ var ViewModel = function() {
             icon: model.default_icon()
           });
 
-          // add event listener to show info window
-          // when marker is clicked on
-          marker.addListener("click", function() {
-            console.log("the marker was clicked");
-            self.currentWindowPosition(marker.position);
-            self.populateInfoWindow(this);
-          });
-
-          // add event when hovered over marker
-          marker.addListener("mouseover", function() {
-            this.setIcon(model.hover_icon());
-          });
-
-          // add event when no longer hoevered
-          marker.addListener("mouseout", function() {
-            this.setIcon(model.default_icon());
-          });
-
-          self.markersAndPlaces.push({
+          var object = {
             marker: marker,
             place: place,
             // initialize visible to true so the marker appears
@@ -124,6 +104,26 @@ var ViewModel = function() {
             foursquareInfo: ko.observable(false),
             // initialize to false to the google info window does not appear
             googleInfo: ko.observable(false)
+          };
+          
+          self.markersAndPlaces.push(object);
+
+          // add event listener to show info window
+          // when marker is clicked on
+          object.marker.addListener("click", function() {
+            self.currentWindowPosition(marker.position);
+            self.populateInfoWindow(this);
+            self.toggleInformationWindows(object);
+          });
+
+          // add event when hovered over marker
+          object.marker.addListener("mouseover", function() {
+            this.setIcon(model.hover_icon());
+          });
+
+          // add event when no longer hoevered
+          object.marker.addListener("mouseout", function() {
+            this.setIcon(model.default_icon());
           });
 
           // extend the bounds for the current marker position
@@ -131,11 +131,18 @@ var ViewModel = function() {
 
           // fit map to current bounds
           map.fitBounds(self.bounds);
+          
         } else {
-          console.log("getDetails method status NOT OK");
+          
+          alert("getDetails method status NOT OK");
+          
         }
+        
+        
+        
       });
     });
+    
   };
   
   // function to toggle the marker icon when the 
@@ -145,6 +152,11 @@ var ViewModel = function() {
   }
   this.markerIconToDefault = function(object) {
     object.marker.setIcon(model.default_icon());
+  }
+  this.allMarkerAnimationNull = function() {
+    self.markersAndPlaces().forEach(function(object) {
+      object.marker.setAnimation(null);
+    });
   }
   
   
@@ -230,6 +242,12 @@ var ViewModel = function() {
     }
     self.sortMarkersArray();
   };
+  this.toggleAllMarkersVisible = function() {
+    self.markersAndPlaces().forEach(function(object){
+      object.visible(true);
+      object.marker.setVisible(true);
+    });
+  };
   
   
   
@@ -245,12 +263,15 @@ var ViewModel = function() {
   this.infoWindow.addListener("closeclick", function() {
     self.infoWindow.marker = null;
     self.currentWindowPosition(null);
+    self.toggleAllGoogleInfos();
+    self.toggleFourSquareOff_All();
+    self.allMarkerAnimationNull();
   });
   // function to populate an info window
   this.populateInfoWindow = function(marker) {
-    console.log("Now calling the populateInfoWindow function()");
+    
     if (marker.getVisible()) {
-      console.log("Marker is visible...");
+      
       self.infoWindow.setContent("");
       // clear infoWindow for street content
       self.infoWindow.marker = marker;
@@ -283,9 +304,11 @@ var ViewModel = function() {
       );
 
       self.infoWindow.open(map, marker);
+      
     } else {
-      console.log("Marker is not visible..");
+      
       self.infoWindow.close();
+      
     }
   };
   
@@ -293,28 +316,85 @@ var ViewModel = function() {
   
   
   /* The following functions and objects are 
-   * involved with the SearchBox object created 
+   * involved with the Autcomplete object created 
    */
   
-  // initialize the autocomplete object for the neighborhood search bar
-  this.neighborhoodAutoComplete = new google.maps.places.Autocomplete($("#neighborhoodZoom")[0]);
-  // create neighborhood variable to represent the current bounds
-  this.neighborhood = ko.observable("New York City");
+  // init function for the filter address autocomplete
+  this.initFilterAutoComplete = function(element) {
+    self.filterAutoComplete = new google.maps.places.Autocomplete(element);
+    self.filterAutoComplete.addListener('place_changed', self.filterSearchResults );
+    self.filterAutoComplete.bindTo('bounds', map);
+    console.log("Filter Autocomplete object created");
+  }
+  // function to filter markersAndPlaces array
+  this.filterSearchResults = function() {
+    console.log("Calling filter function");
+    // create new GeoCoder object
+    var geocoder = new google.maps.Geocoder();
+    // geocode the filter text input to retrieve place information
+    geocoder.geocode({ address: self.filterInputText() }, function(results, status) {
+      // if status = OK
+      if (status == google.maps.GeocoderStatus.OK) {
+        console.log("Status OK");
+        // clear all info windows
+        self.toggleFourSquareOff_All();
+        self.toggleAllGoogleInfos();
+        // close the current infoWindow (if it is open)
+        self.infoWindow.close();
+        // make all locations and markers visible
+        self.toggleAllMarkersVisible();
+        // store the latlng object of filter location within initLocation
+        var initLocation = results[0].geometry.location;
+        // iterate through markersAndPlaces
+        self.markersAndPlaces().forEach(function(object) {
+          // store the current objects latlng object within variable currLocation
+          var currLocation = object.marker.position;
+          // store the distance between the two locations in variable distance
+          // (in meters)
+          var distance = google.maps.geometry.spherical.computeDistanceBetween(initLocation, currLocation);
+          if (distance > self.selectedDistanceMeters() ) {
+            object.visible(false);
+            object.marker.setVisible(false);
+            
+          }
+          
+        });
+        
+        self.sortMarkersArray();
+        
+        
+        
+      } else {
+        console.log(
+          "Could not find specified address\n" +
+            "Try clicking on one of the autocomplete suggestions!"
+        );
+      }
+    });
+  }
+  // observable to link the value of the filter AutoComplete text input
+  this.filterInputText = ko.observable("");
+  // observable for the filter miles distance slider
+  this.selectedDistanceMiles = ko.observable(25);
+  // ko computed variable to covert miles to meters
+  this.selectedDistanceMeters = ko.computed(function() {
+    return self.selectedDistanceMiles() * 1609.34;
+  });
+  
+  // function to initialize the autocomplete object
+  this.initAutoComplete = function(element) {
+    self.neighborhoodAutoComplete = new google.maps.places.Autocomplete(element);
+    self.neighborhoodAutoComplete.addListener('place_changed', self.zoomToNeighborhood);
+    console.log("Autocomplete object created");
+  }
   // function which executes sorrounding the
   // neighborhood form section in the aside
   this.zoomToNeighborhood = function() {
     var geocoder = new google.maps.Geocoder();
-    var address = $("#neighborhoodZoom").val();
+    var address = self.neighborhoodInputText();
     geocoder.geocode({ address: address }, function(results, status) {
       if (status == google.maps.GeocoderStatus.OK) {
         map.setCenter(results[0].geometry.location);
-        var objectResults = results[0].address_components;
-        for (var i = 0; i < objectResults.length; i++) {
-          if (objectResults[i].types[0] == "locality") {
-            self.neighborhood(objectResults[i].long_name);
-          }
-        }
-        //console.log(results[0].address_components);
       } else {
         alert(
           "Could not find specified address\n" +
@@ -322,7 +402,10 @@ var ViewModel = function() {
         );
       }
     });
+  
   };
+  // ko observable for the Neighborhood inputText binding
+  this.neighborhoodInputText = ko.observable("");
   
   
   
@@ -331,19 +414,19 @@ var ViewModel = function() {
    * involved with the SearchBox object created 
    */
   
-  // create searchbox object
-  this.searchBox = new google.maps.places.SearchBox($("#searchTerms")[0], {
-    bounds: self.currentBounds()
-  });
-  // add listener function to retrieve results
-  // from search box when the place is changed
-  this.searchBox.addListener("places_changed", function() {
+  
+  // function to initialize the SearchBox object
+  this.initSearchBox = function(element) {
+   self.searchBox = new google.maps.places.SearchBox(element, {
+      bounds: self.currentBounds()
+    });
+   self.searchBox.addListener("places_changed", function() {
     // retrieve places from searchBox object getPlaces() method
     var places = self.searchBox.getPlaces();
     // if no place was returned alert user
     if (places.length === 0) {
       alert(
-        "No places found\n" + "Try selecting an option from the suggested items"
+        "No places found\nTry selecting an option from the suggested items"
       );
       return;
     }
@@ -358,30 +441,31 @@ var ViewModel = function() {
       // extend bounds object
       self.bounds.extend(marker.position);
 
-      // push objects into markersAndPlaces Array
-      self.markersAndPlaces.push({
+      var object = {
         marker: marker,
         place: place,
         visible: ko.observable(true),
         foursquareInfo: ko.observable(false),
         googleInfo: ko.observable(false)
-      });
+      };
+      // push objects into markersAndPlaces Array
+      self.markersAndPlaces.push(object);
 
       // add event listener to show info window
       // when marker is clicked on
-      marker.addListener("click", function() {
-        console.log("the marker was clicked");
+      object.marker.addListener("click", function() {
         self.currentWindowPosition(marker.position);
         self.populateInfoWindow(this);
+        self.toggleInformationWindows(object);
       });
 
       // add event when hovered over marker
-      marker.addListener("mouseover", function() {
+      object.marker.addListener("mouseover", function() {
         this.setIcon(model.hover_icon());
       });
 
       // add event when no longer hoevered
-      marker.addListener("mouseout", function() {
+      object.marker.addListener("mouseout", function() {
         this.setIcon(model.default_icon());
       });
     });
@@ -390,7 +474,13 @@ var ViewModel = function() {
     map.fitBounds(self.bounds);
     // clear the bounds object for future use
     self.bounds = new google.maps.LatLngBounds();
+      
   });
+    
+    console.log("SearchBox object created");
+    
+  };
+  
   // create Marker object from PlaceResult returned from searchBox function
   // ... returns a Marker object...
   this.createMarker_searchBox = function(object) {
@@ -455,21 +545,18 @@ var ViewModel = function() {
     
     // if polygon:
     if (self.polygon instanceof google.maps.Polygon) {
-      console.log("this is a Polygon shape");
       self.searchWithinPolygon();
       self.polygon.getPath().addListener("set_at", self.searchWithinPolygon);
       self.polygon.getPath().addListener("insert_at", self.searchWithinPolygon);
     }
     // if Circle
     if (self.polygon instanceof google.maps.Circle) {
-      console.log("this is a Circle shape");
       self.searchWithinCirlce();
       self.polygon.addListener("radius_changed", self.searchWithinCirlce);
       self.polygon.addListener("center_changed", self.searchWithinCirlce);
     }
     // if rectangle
     if (self.polygon instanceof google.maps.Rectangle) {
-      console.log("this is a Rectangle shape");
       self.searchWithinRectangle();
       self.polygon.addListener("bounds_changed", self.searchWithinRectangle);
     }
@@ -585,31 +672,28 @@ var ViewModel = function() {
   // also toggles all others off
   this.toggleThisFourSquareInfo = function(object) {
     // clear observables
-    self.currentFourSquareVenue(null);
-    self.currentFourSquareHours.removeAll();
-    self.currentFourSquareName(null);
-    self.currentFourSquareRating(null);
+    self.clearFSInfo();
 
     // if the current objects info is true
     if (object.foursquareInfo()) {
       self.toggleFourSquareOff_All();
-      console.log("Window was already open");
 
       // else, if the current object info is false
     } else {
       self.FSgetPlace(object);
       self.toggleFourSquareOff_All();
       object.foursquareInfo(true);
-      console.log(object.foursquareInfo());
     }
   };
   // toggles both the google places information div
   // and the foursquare information div
   this.toggleInformationWindows = function(object) {
+    self.allMarkerAnimationNull();
     self.toggleThisGoogleInfoWindow(object);
     self.toggleThisFourSquareInfo(object);
     if (object.visible() && object.googleInfo() && object.foursquareInfo()) {
       self.populateInfoWindow(object.marker);
+      object.marker.setAnimation(google.maps.Animation.BOUNCE);
     } else {
       self.infoWindow.close();
     }
@@ -633,91 +717,115 @@ var ViewModel = function() {
   this.FSgetPlaceID = function(object) {
     // create location variable to store lat, lng coords
     // of place
-    var location =
-      object.place.geometry.location.lat() +
-      "," +
-      object.place.geometry.location.lng();
+    var location = object.place.geometry.location.lat() + "," +
+        object.place.geometry.location.lng();
     // create url variable to get passed into ajax request
-    var url =
-      "https://api.foursquare.com/v2/venues/search?" +
-      "client_id=" +
-      model.foursquare_id +
-      "&client_secret=" +
-      model.foursquare_secret +
-      "&v=" +
-      model.foursquare_version +
-      "&ll=" +
-      location +
-      "&intent=match" +
-      "&query=" +
-      object.marker.title +
-      "&limit=1";
+    var url = ("https://api.foursquare.com/v2/venues/search?" +
+               "client_id=" + model.foursquare_id + 
+               "&client_secret=" + model.foursquare_secret +
+               "&v=" + model.foursquare_version + "&ll=" + location +
+               "&intent=match" +
+               "&query=" + object.marker.title +
+               "&limit=1");
 
-    var result = $.ajax({
+    $.ajax({
+      type: "GET",
       url: url,
-      async: false,
-      dataType: "json"
-    }).responseJSON;
-    // print the resulting foursquare ID
-    // (mostly for debugging purposes)
-    // return the ID value
-    return result.response.venues[0].id;
+      cache: false,
+      dataType: "json",
+      success: function(data) {
+        // capture the ID of the first venue
+        var id = data.response.venues[0].id;
+        // call the getPlaceDetails function with id
+        self.FSgetPlaceDetails(id);
+      }
+    });
+    
   };
   // get place details from foursquare
   // using a place's ID
   this.FSgetPlaceDetails = function(id) {
     // create api url with id passed in
-    var url =
-      "https://api.foursquare.com/v2/venues/" +
-      id +
-      "?" +
-      "client_id=" +
-      model.foursquare_id +
-      "&client_secret=" +
-      model.foursquare_secret +
-      "&v=" +
-      model.foursquare_version;
-
+    var url = ( "https://api.foursquare.com/v2/venues/" + id + "?" +
+               "client_id=" + model.foursquare_id + 
+               "&client_secret=" + model.foursquare_secret +
+               "&v=" + model.foursquare_version);
+    
     // perform ajax request and pass response into variable
-    var result = $.ajax({
+    $.ajax({
+      
+      
+      type: "GET",
       url: url,
-      async: false,
-      dataType: "json"
-    }).responseJSON;
+      cache: false,
+      dataType: "json",
+      success: function(data) {
+        var result = data;
+        // store venue object (for easy access)
+        var venue = result.response.venue;
+      
+        // check if the venue object contains the
+        // 'hours' property
+        if (venue.hasOwnProperty('hours')) {
+        
+          // log that the foursquare place indeed has an 'hours' property
+          console.log("Object contains 'hours' property");
+        
+          // store the 'hours' array in variable for easy access
+          var hours = venue.hours.timeframes;
+        
+          // iterate through hours array and push into the
+          // currentFourSquareHours observableArray
+          for (var i = 0; i < hours.length; i++) {
+            var days = hours[i].days;
+            var time = hours[i].open[0].renderedTime;
+            self.currentFourSquareHours.push({
+              days: days,
+              time: time
+            });
+          }
+        } 
+        else {
+          console.log("Object does not contain 'hours' property");
+        }
+        
+        var name = result.response.venue.name;
+        var rating = result.response.venue.rating;
 
-    var hours = result.response.venue.hours.timeframes;
-    var name = result.response.venue.name;
-    var rating = result.response.venue.rating;
-
-    // store result within observable
-    self.currentFourSquareVenue(result);
-    self.currentFourSquareName(name);
-    self.currentFourSquareRating(rating);
-
-    for (var i = 0; i < hours.length; i++) {
-      var days = hours[i].days;
-      var time = hours[i].open[0].renderedTime;
-      self.currentFourSquareHours.push({
-        days: days,
-        time: time
-      });
-      // console.log(days, time);
-    }
+        // store result within observable
+        self.currentFourSquareVenue(result);
+        self.currentFourSquareName(name);
+        self.currentFourSquareRating(rating);   
+      }
+      
+      
+    });
+    
   };
   // function that calls the FSgetPlaceID and then the
   // FSgetPlaceDetails together
   this.FSgetPlace = function(object) {
     // retrieve id# from foursquare venue search
-    var id = self.FSgetPlaceID(object);
-    // call FSgetPlaceDetails after passing in the venue id
-    self.FSgetPlaceDetails(id);
+    self.FSgetPlaceID(object);
   };
+  // clears currentFourSquare observables
+  this.clearFSInfo = function() {
+    self.currentFourSquareVenue(null);
+    self.currentFourSquareHours.removeAll();
+    self.currentFourSquareName(null);
+    self.currentFourSquareRating(null);
+  }
 
 };
 
 
-function initMap() {
+initMap = () => {
   var init = new ViewModel();
   ko.applyBindings(init);
   init.dropDefaultMarkers();
+  
+}
+
+mapError = () => {
+  console.log("Call to google maps API failed :( ");
 }
