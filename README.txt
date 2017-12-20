@@ -8,7 +8,7 @@ By: John Conway
 -----------------
 :::::CREDITS:::::
 -----------------
-This code was written using CodePen.
+This code was written using CodePen, using the "knockout" framework.
 Thanks to Udacity for inspiration, and various code snippets used throughout.
 This application uses the google maps javascript API. Various code snippets have been taken from the documentation.
 This application also uses the foursquare url APIs with JQuery Ajax calls.
