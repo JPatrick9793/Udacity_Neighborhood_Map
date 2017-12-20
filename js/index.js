@@ -375,7 +375,7 @@ var ViewModel = function() {
   // observable to link the value of the filter AutoComplete text input
   this.filterInputText = ko.observable("");
   // observable for the filter miles distance slider
-  this.selectedDistanceMiles = ko.observable(25);
+  this.selectedDistanceMiles = ko.observable(10);
   // ko computed variable to covert miles to meters
   this.selectedDistanceMeters = ko.computed(function() {
     return self.selectedDistanceMiles() * 1609.34;
@@ -738,6 +738,10 @@ var ViewModel = function() {
         var id = data.response.venues[0].id;
         // call the getPlaceDetails function with id
         self.FSgetPlaceDetails(id);
+      },
+      error: function(data) {
+        console.log("Foursquare API query failed to return places for coordinates, and query: ", location, object.marker.title);
+        alert("Foursquare API query failed to return places for:\nCoordinates: "+location+"\nand Query: "+ object.marker.title);
       }
     });
     
@@ -753,8 +757,6 @@ var ViewModel = function() {
     
     // perform ajax request and pass response into variable
     $.ajax({
-      
-      
       type: "GET",
       url: url,
       cache: false,
@@ -796,9 +798,11 @@ var ViewModel = function() {
         self.currentFourSquareVenue(result);
         self.currentFourSquareName(name);
         self.currentFourSquareRating(rating);   
-      }
-      
-      
+      },
+      error: function(data) {
+        console.log("Foursquare API call failed to find details for place, given VENUE_ID: ", id);
+        alert("Foursquare API call failed to find details for VENUE_ID: "+id); 
+      } 
     });
     
   };
@@ -828,4 +832,5 @@ initMap = () => {
 
 mapError = () => {
   console.log("Call to google maps API failed :( ");
+  alert("Call to google maps API failed.\n\nPlease try reloading the page.\n\nCheck the API call src url if problem persists.");
 }
