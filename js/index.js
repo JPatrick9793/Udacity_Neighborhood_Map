@@ -114,6 +114,8 @@ var ViewModel = function() {
             self.currentWindowPosition(marker.position);
             self.populateInfoWindow(this);
             self.toggleInformationWindows(object);
+            map.setZoom(11);
+            map.setCenter(marker.getPosition());
           });
 
           // add event when hovered over marker
@@ -457,6 +459,8 @@ var ViewModel = function() {
         self.currentWindowPosition(marker.position);
         self.populateInfoWindow(this);
         self.toggleInformationWindows(object);
+        map.setZoom(11);
+        map.setCenter(marker.getPosition());
       });
 
       // add event when hovered over marker
